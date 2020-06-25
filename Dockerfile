@@ -25,7 +25,8 @@ RUN wget https://github.com/Foxcapades/gh-latest/releases/download/v1.0.4/gh-lat
 COPY lib /opt/handler/lib
 COPY bin /opt/handler/bin
 COPY config.yml config.yml
-RUN chmod +x /opt/handler/bin/exportBiomToEuPathDB
+RUN pip install git+https://github.com/VEuPathDB/dataset-handler-python-base \
+    && chmod +x /opt/handler/bin/exportBiomToEuPathDB
 
 EXPOSE 80
 CMD ./server

@@ -1,46 +1,61 @@
 #!/usr/bin/python
 
-import EupathExporter
+from handler_base.dataset_handler import DatasetHandler, ValidationException
 import biom
 from biom.cli.table_validator import _validate_table
 from biom.parse import load_table
 
 
-class BiomExport(EupathExporter.Export):
+class BiomExport(DatasetHandler):
+    """
+    Biom Format Exporter
+
+    Args:
+        args (list of str): CLI Input arguments
+            Input Arguments:
+                Base Arguments:
+                    1: Dataset Name
+                    2: Dataset Summary
+                    3: Dataset Description
+                    4: User ID
+                    5: Output File
+                    6: Dataset Origin
+                Biom Specific Arguments:
+                    7: Dataset file path
+
+    Attributes:
+        BIOM_TYPE (str): Constant dataset type value
+        BIOM_VERSION (str): Constant dataset type version value
+    """
 
     BIOM_TYPE = "BIOM"
     BIOM_VERSION = "1.0, 2.0, or 2.1"
 
     def __init__(self, args):
-        """
-        Initializes the gene list export class with the parameters needed to accomplish the particular
-        type of export.
-        :param args: parameters provided from tool form
-        """
-
-        EupathExporter.Export.__init__(
+        DatasetHandler.__init__(
             self,
             BiomExport.BIOM_TYPE,
             BiomExport.BIOM_VERSION,
             None,
             args)
 
-        # generic 7 arguments and then dataset file path
-        if len(args) < 8:
-            raise EupathExporter.ValidationException("The tool was passed an insufficient numbers of arguments:", args)
+        # generic 7 arguments, then dataset file path and dataset origin
+        if len(args) < 7:
+            raise ValidationException("The tool was passed an insufficient numbers of arguments:", args)
 
-        self._dataset_file_path = args[7]
+        self._dataset_file_path = args[6]
 
     def validate_datasets(self):
-        # try read a file
-        # gives stupid errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
-        #        valid, report = _validate_table(self._dataset_file_path)
-        #        if not valid:
-        #          raise EupathExporter.ValidationException(report)
+        """
+        try read a file
+
+        gives stupid errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
+        """
+
         try:
             table = load_table(self._dataset_file_path)
         except ValueError, e:
-            raise EupathExporter.ValidationException(
+            raise ValidationException(
                 "Could not load the file as BIOM - does it conform to the specification on https://biom-format.org?", e)
 
         give_table_extra_methods(table)
@@ -67,19 +82,6 @@ class BiomExport(EupathExporter.Export):
           {"name": "metadata.json", "path": self._dataset_file_path+".metadata.json"},
           {"name": "data.tsv", "path": self._dataset_file_path + ".data.tsv"}
         ]
-
-    def output_success(self):
-        header = "<html><body><h1>Good news!</h1><br />"
-        msg = """
-        <h2>Results of the VEuPathDB Export Tool<br />BIOM files to MicrobiomeDB</h2>
-        <h3>Your BIOM file was exported from Galaxy to your account in VEuPathDB.
-         For file access, go to the My Data Sets section on MicrobiomeDB:
-          <a href='http://microbiomedb.org/mbio/app/workspace/datasets'>My Data Sets</a><br />
-        </h3><br />
-        </body></html>
-        """
-        with open(self._output, 'w') as file:
-            file.write("%s%s" % (header, msg))
 
 
 def give_table_extra_methods(table):
@@ -256,10 +258,11 @@ def give_table_extra_methods(table):
             direct_io.write(columns)
             direct_io.write(u'}')
         else:
-            return u"{%s}" % ''.join([id_, format_, format_url, matrix_type,
-                                      generated_by, date, type_,
-                                      matrix_element_type, shape,
-                                      u''.join(data), rows, columns])
+            return u"{%s}" % ''.join(
+                [id_, format_, format_url, matrix_type,
+                 generated_by, date, type_,
+                 matrix_element_type, shape,
+                 u''.join(data), rows, columns])
 
     # This is also copy pasted from
     # https://github.com/biocore/biom-format/blob/fd84172794d14a741a5764234d7a28416b9dba08/biom/table.py#L4451

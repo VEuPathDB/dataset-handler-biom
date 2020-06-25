@@ -4,7 +4,7 @@ import sys
 import json
 sys.path.insert(0, "/opt/handler/lib/python")
 from eupath import BiomFileMicrobiomeDbExporter
-from eupath import EupathExporter
+from handler_base.dataset_handler import ValidationException
 import optparse
 
 
@@ -29,7 +29,7 @@ def main():
     exporter = BiomFileMicrobiomeDbExporter.BiomExport(args)
     try:
         exporter.export()
-    except EupathExporter.ValidationException as ve:
+    except ValidationException as ve:
         print >> sys.stderr, json.dumps({'error': 'user', 'message': str(ve)})
         sys.exit(1)
     except BaseException as err:

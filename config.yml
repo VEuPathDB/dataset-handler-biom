@@ -7,22 +7,19 @@ command:
   # VEuPathDB/EuPathGalaxy github repository.
   executable: /opt/handler/bin/exportBiomToEuPathDB
   args:
-    # dataset name
+    # 1. dataset name
     - <<ds-name>>
-    # dataset summary
+    # 2. dataset summary
     - <<ds-summary>>
-    # dataset description
+    # 3. dataset description
     - <<ds-description>>
-    # dataset uploader "email" (for compatibility purposes, not a real email address)
-    # <anything>.<wdk user id>@veupathdb.org
-    - <<ds-user-email>>
-    # path to XML lib
-    - ""
-    # output file (ignored)
+    # 4. dataset uploader id
+    - "<<ds-user-id>>"
+    # 5. output file (ignored)
     - html.html
-    # ???
-    - ""
-    # dataset file path
+    # 6. Dataset origin
+    - "<<ds-origin>>"
+    # 7. dataset file path
     - <<input-files[0]>>
 file-types:
   - .biom
