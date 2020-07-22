@@ -14,11 +14,11 @@ command:
     # 3. dataset description
     - <<ds-description>>
     # 4. dataset uploader id
-    - "<<ds-user-id>>"
+    - <<ds-user-id>>
     # 5. output file (ignored)
     - html.html
     # 6. Dataset origin
-    - "<<ds-origin>>"
+    - <<ds-origin>>
     # 7. dataset file path
     - <<input-files[0]>>
 file-types:
