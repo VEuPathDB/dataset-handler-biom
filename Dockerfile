@@ -8,11 +8,14 @@ FROM veupathdb/galaxy-python-tools:latest
 
 WORKDIR /app
 
-RUN wget https://github.com/Foxcapades/gh-latest/releases/download/v1.0.4/gh-latest-linux.v1.0.4.tar.gz -O tmp.tgz \
-    && tar -xzf tmp.tgz \
+ADD https://github.com/Foxcapades/gh-latest/releases/download/v1.0.4/gh-latest-linux.v1.0.4.tar.gz tmp.tgz
+
+RUN tar -xzf tmp.tgz \
     && mv gh-latest /usr/bin \
     && rm tmp.tgz \
-    && wget $(gh-latest -u VEuPathDB/util-user-dataset-handler-server | grep server-) -O tmp.tgz \
+    && export server_url=$(gh-latest -u VEuPathDB/util-user-dataset-handler-server | grep server-) \
+    && echo using server version ${server_url} \
+    && wget ${server_url} -O tmp.tgz \
     && tar -xzf tmp.tgz \
     && rm tmp.tgz
 
