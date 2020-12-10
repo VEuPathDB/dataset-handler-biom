@@ -4,6 +4,7 @@ from handler_base.dataset_handler import DatasetHandler, ValidationException
 import biom
 from biom.cli.table_validator import _validate_table
 from biom.parse import load_table
+import urllib2
 
 
 class BiomExport(DatasetHandler):
@@ -51,9 +52,17 @@ class BiomExport(DatasetHandler):
 
         gives stupid errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
         """
-
+        if(self._dataset_file_path.endswith(".path-to.biom")):
+            with open(self._dataset_file_path) as x:
+                content_with_url = x.read().strip()
+                downloaded_file = urllib2.urlopen(content_with_url).read()
+                with open(self._dataset_file_path+".downloaded", 'w') as tmp:
+                    tmp.write(downloaded_file)
+            content_path = self._dataset_file_path+".downloaded"
+        else:
+            content_path = self._dataset_file_path
         try:
-            table = load_table(self._dataset_file_path)
+            table = load_table(content_path)
         except ValueError, e:
             raise ValidationException(
                 "Could not load the file as BIOM - does it conform to the specification on https://biom-format.org?", e)
