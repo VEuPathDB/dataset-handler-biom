@@ -2,6 +2,7 @@
 
 from handler_base.dataset_handler import DatasetHandler, ValidationException
 import biom
+import os
 from biom.cli.table_validator import _validate_table
 from biom.parse import load_table
 import urllib2
@@ -42,7 +43,7 @@ class BiomExport(DatasetHandler):
 
         # generic 7 arguments, then dataset file path and dataset origin
         if len(args) < 7:
-            raise ValidationException("The tool was passed an insufficient numbers of arguments:", args)
+            raise ValueError("The tool was passed an insufficient numbers of arguments:", args)
 
         self._dataset_file_path = args[6]
 
@@ -50,22 +51,37 @@ class BiomExport(DatasetHandler):
         """
         try read a file
 
-        gives stupid errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
+        the biom validator is too strict - gives errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
         """
         if(self._dataset_file_path.endswith(".path-to.biom")):
             with open(self._dataset_file_path) as x:
                 content_with_url = x.read().strip()
-                downloaded_file = urllib2.urlopen(content_with_url).read()
+                try:
+                    url=urllib2.urlopen(content_with_url)
+                except urllib2.URLError, e:
+                    raise ValidationException("Could open the URL: " + content_with_url)
+                except ValueError, e:
+                    raise ValidationException("Not a good URL: " + content_with_url)
+                try:
+                    downloaded_file = url.read()
+                except Exception, e:
+                    raise ValidationException("Could not read data from URL: " + url.geturl())
                 with open(self._dataset_file_path+".downloaded", 'w') as tmp:
                     tmp.write(downloaded_file)
             content_path = self._dataset_file_path+".downloaded"
         else:
             content_path = self._dataset_file_path
+        if not os.path.exists(content_path):
+            raise ValueError("Does not exist: " . content_path)
         try:
             table = load_table(content_path)
+        except TypeError, e:
+            raise ValidationException(e)
         except ValueError, e:
+            raise ValidationException(e)
+        except Exception, e:
             raise ValidationException(
-                "Could not load the file as BIOM - does it conform to the specification on https://biom-format.org?", e)
+                "Could not load the file as BIOM - does it conform to the specification on https://biom-format.org?")
 
         give_table_extra_methods(table)
         generated_by = "MicrobiomeDb exporter"
