@@ -59,7 +59,7 @@ class BiomExport(DatasetHandler):
                 try:
                     url=urllib2.urlopen(content_with_url)
                 except urllib2.URLError, e:
-                    raise ValidationException("Could open the URL: " + content_with_url)
+                    raise ValidationException("Could not open the URL: " + content_with_url)
                 except ValueError, e:
                     raise ValidationException("Not a good URL: " + content_with_url)
                 try:
