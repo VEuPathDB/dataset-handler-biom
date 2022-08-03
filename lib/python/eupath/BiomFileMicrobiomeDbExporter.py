@@ -53,24 +53,9 @@ class BiomExport(DatasetHandler):
 
         the biom validator is too strict - gives errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
         """
-        if(self._dataset_file_path.endswith(".path-to.biom")):
-            with open(self._dataset_file_path) as x:
-                content_with_url = x.read().strip()
-                try:
-                    url=urllib2.urlopen(content_with_url)
-                except urllib2.URLError, e:
-                    raise ValidationException("Could not open the URL: " + content_with_url)
-                except ValueError, e:
-                    raise ValidationException("Not a good URL: " + content_with_url)
-                try:
-                    downloaded_file = url.read()
-                except Exception, e:
-                    raise ValidationException("Could not read data from URL: " + url.geturl())
-                with open(self._dataset_file_path+".downloaded", 'w') as tmp:
-                    tmp.write(downloaded_file)
-            content_path = self._dataset_file_path+".downloaded"
-        else:
-            content_path = self._dataset_file_path
+
+        content_path = self._dataset_file_path
+
         if not os.path.exists(content_path):
             raise ValueError("Does not exist: " . content_path)
         try:
