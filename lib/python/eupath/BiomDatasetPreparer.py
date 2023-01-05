@@ -1,59 +1,62 @@
 #!/usr/bin/python
 
-from handler_base.dataset_handler import DatasetHandler, ValidationException
 import biom
 import os
+import sys
+import shutil
 from biom.cli.table_validator import _validate_table
 from biom.parse import load_table
 import urllib2
 
+VALIDATION_ERROR_CODE = 100
 
-class BiomExport(DatasetHandler):
-    """
-    Biom Format Exporter
+class BiomDatasetPreparer():
 
-    Args:
-        args (list of str): CLI Input arguments
-            Input Arguments:
-                Base Arguments:
-                    1: Dataset Name
-                    2: Dataset Summary
-                    3: Dataset Description
-                    4: User ID
-                    5: Output File
-                    6: Dataset Origin
-                Biom Specific Arguments:
-                    7: Dataset file path
+    def execute(self):
+      try:
+          self.collectAndValidateCliArgs()
+          biomTable = self.validateBiomFile()
+          self.prepareOutputFiles(biomTable)
+        except ValidationException, e:
+          print getattr(e, 'message', repr(e)) # validation error must go to STDOUT, to ship to user
+          sys.exit(VALIDATION_ERROR_CODE)
+        except Exception e:
+          print(getattr(e, 'message', repr(e)), file=sys.stderr)
+          sys.exit(1)
+          
+        
+    def collectAndValidateCliArgs(self):
+        (options, args) = optparse.OptionParser().parse_args()
+        if len(args) < 2:
+            usage = """
+Usage: {} input_dir output_dir
 
-    Attributes:
-        BIOM_TYPE (str): Constant dataset type value
-        BIOM_VERSION (str): Constant dataset type version value
-    """
+Prepare and validate a dataset for import.
 
-    BIOM_TYPE = "BIOM"
-    BIOM_VERSION = "1.0, 2.0, or 2.1"
+input_dir must contain the original dataset files, and no other files.
+output_dir will contain the import-ready set of files.  If any of the original file(s) are needed, they should be copied to output_dir
 
-    def __init__(self, args):
-        DatasetHandler.__init__(
-            self,
-            BiomExport.BIOM_TYPE,
-            BiomExport.BIOM_VERSION,
-            None,
-            args)
+If there is a validation error, exits with status 100.  STDOUT will contain the user-appropriate validation error message""".format(sys.argv[0])
+            print(usage file=sys.stderr)
+            exit(-1)
+        self._input_dir = args[0]
+        self._output_dir = args[1]
 
-        # generic 7 arguments, then dataset file path and dataset origin
-        if len(args) < 7:
-            raise ValueError("The tool was passed an insufficient numbers of arguments:", args)
+        if not os.path.isdir(self._input_dir) && len(os.listdir(self._input_dir)) == 1:
+            raise Exception("input_dir must exist and contain exactly one file.", file=sys.stderr)
 
-        self._dataset_file_path = args[6]
+        if not  os.path.isdir(self._output_dir) && len(os.listdir(self._output_dir)) == 0:
+            raise Exception("output_dir must exist and be empty.", file=sys.stderr)
 
-    def validate_datasets(self):
+        biomFile = os.listdir(self._input_dir)[0]
+        shutil.copy(self._input_dir + "/" + biomFile, self._output_dir);
+        self._dataset_file_path = self._output_dir + "/" + biomFile
+        
+    def validateBiomFile(self):
         """
-        try read a file
-
         the biom validator is too strict - gives errors like "Invalid format 'Biological Observation Matrix 0.9.1-dev', must be '1.0.0'"
         """
-
+        
         content_path = self._dataset_file_path
 
         if not os.path.exists(content_path):
@@ -68,6 +71,9 @@ class BiomExport(DatasetHandler):
             raise ValidationException(
                 "Could not load the file as BIOM - does it conform to the specification on https://biom-format.org?")
 
+        return table;
+
+    def prepareOutputFiles(self, table):
         give_table_extra_methods(table)
         generated_by = "MicrobiomeDb exporter"
 
@@ -77,14 +83,6 @@ class BiomExport(DatasetHandler):
         with open(self._dataset_file_path+".data.tsv", 'w') as f2:
             table.to_json_but_only_data_and_not_json_but_tsv(generated_by, direct_io=f2)
 
-    def identify_dependencies(self):
-        return []
-
-    def identify_projects(self):
-        return ["MicrobiomeDB"]
-
-    def identify_supported_projects(self):
-        return ["MicrobiomeDB"]
 
     def identify_dataset_files(self):
         return [

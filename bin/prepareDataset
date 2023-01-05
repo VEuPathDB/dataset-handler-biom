@@ -5,14 +5,19 @@ import json
 sys.path.insert(0, "/opt/handler/lib/python")
 #sys.path.insert(0, "./lib/python")
 
-from eupath import BiomFileMicrobiomeDbExporter
-from handler_base.dataset_handler import ValidationException
-import optparse
+from eupath import BiomDatasetPreparer
+
+def main():
+    BiomDatasetPreparer.execute()
+
+if __name__ == "__main__":
+    sys.exit(main())
+
 
 
 def main():
     """
-      The following program is a Galaxy Tool for exporting a BIOM file from Galaxy to EuPathDB via iRODS.
+      The following program is an dataset preparer for BIOM files.  It reads a biom file from input dir, and writes corresponding .metadata.json and .tsv files.
 
       Sample for testing outside of Galaxy (assuming the existing file structure):
       python exportGeneListToEuPathDB \
@@ -25,8 +30,6 @@ def main():
         parser = optparse.OptionParser()
         (options, args) = parser.parse_args()
     
-        # So users are greeted with a bewildering traceback
-        # copied from gene list exporter
         sys.tracebacklimit = 0
     
         exporter = BiomFileMicrobiomeDbExporter.BiomExport(args)
