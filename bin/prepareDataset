@@ -1,51 +1,13 @@
 #!/usr/bin/env python
 
 import sys
-import json
 sys.path.insert(0, "/opt/handler/lib/python")
 #sys.path.insert(0, "./lib/python")
 
 from eupath import BiomDatasetPreparer
 
 def main():
-    BiomDatasetPreparer.execute()
-
-if __name__ == "__main__":
-    sys.exit(main())
-
-
-
-def main():
-    """
-      The following program is an dataset preparer for BIOM files.  It reads a biom file from input dir, and writes corresponding .metadata.json and .tsv files.
-
-      Sample for testing outside of Galaxy (assuming the existing file structure):
-      python exportGeneListToEuPathDB \
-             "a name" "a summary" "a description" "<user.wdk_id@eupath.org eg. crisl.108976930@eupathdb.org>" \
-             "<the galaxy tool xml directory e.g. ../lib/xml >" "output" "" \
-             "<path to biom file>"
-    """
-
-    try:
-        parser = optparse.OptionParser()
-        (options, args) = parser.parse_args()
-    
-        sys.tracebacklimit = 0
-    
-        exporter = BiomFileMicrobiomeDbExporter.BiomExport(args)
-    except BaseException as err:
-        print >> sys.stderr, json.dumps({'error': 'unknown', 'message': str(err)})
-        sys.exit(1)
-
-    try:
-        exporter.export()
-    except ValidationException as ve:
-        print >> sys.stderr, json.dumps({'error': 'user', 'message': str(ve)})
-        sys.exit(1)
-    except BaseException as err:
-        print >> sys.stderr, json.dumps({'error': 'unknown', 'message': str(err)})
-        sys.exit(1)
-
+    BiomDatasetPreparer().execute()
 
 if __name__ == "__main__":
     sys.exit(main())
